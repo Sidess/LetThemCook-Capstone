@@ -159,9 +159,7 @@ function parseArrayField(field) {
  * @property {number} id - Unique identifier
  * @property {string} name - Recipe name
  * @property {MealType} mealType - Breakfast, Lunch, or Dinner
- * @property {string} prepTime - Time to prepare (e.g. "10 min")
  * @property {string} cookTime - Time to cook (e.g. "20 min")
- * @property {string} totalTime - Total time (e.g. "30 min")
  * @property {string} cookingMethod - How to cook (e.g. "Pan-fry")
  * @property {string[]} coreIngredients - Key ingredients for matching
  * @property {string[]} allIngredients - Complete ingredient list
