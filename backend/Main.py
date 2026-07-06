@@ -12,6 +12,8 @@ import os
 import re
 from pathlib import Path
 from typing import Any, Literal
+import pandas as pd
+import ast  
 
 import requests
 from fastapi import FastAPI, HTTPException
@@ -19,7 +21,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 BASE_DIR = Path(__file__).resolve().parent
-RECIPES_PATH = BASE_DIR / "recipes.json"
+RECIPES_PATH = BASE_DIR / "LetThemCook_Core_Database.csv"
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2")
 USE_OLLAMA = os.getenv("USE_OLLAMA", "true").lower() in {"1", "true", "yes", "y"}
@@ -58,8 +60,38 @@ class RecipeQuery(BaseModel):
 def load_recipes() -> list[dict[str, Any]]:
     if not RECIPES_PATH.exists():
         raise RuntimeError(f"Missing recipe database: {RECIPES_PATH}")
-    with RECIPES_PATH.open("r", encoding="utf-8") as file:
-        return json.load(file)
+    
+    # Read the CSV instead of JSON
+    df = pd.read_csv(RECIPES_PATH)
+    recipes = []
+    
+    for _, row in df.iterrows():
+        # Helper to safely turn CSV text back into Python lists for the frontend
+        def parse_list(val: Any) -> list[str]:
+            if pd.isna(val): return []
+            val_str = str(val)
+            # If the CSV saved the list as a string like "['garlic', 'onion']"
+            if val_str.startswith('[') and val_str.endswith(']'):
+                try:
+                    return ast.literal_eval(val_str)
+                except Exception:
+                    pass
+            # Otherwise, just split it by commas
+            return [x.strip() for x in val_str.split(',')]
+
+        # Map the CSV columns to the exact keys Shancel's frontend expects.
+        # (Note: Adjust the "row.get" strings if your CSV column names are slightly different, e.g. "Recipe_Name")
+        recipes.append({
+            "name": str(row.get("name", row.get("Recipe_Name", ""))),
+            "mealType": str(row.get("mealType", row.get("Meal_Type", "All"))),
+            "totalTime": str(row.get("totalTime", row.get("Total_Time", "60"))),
+            "coreIngredients": parse_list(row.get("coreIngredients", row.get("Core_Ingredients", ""))),
+            "allIngredients": parse_list(row.get("allIngredients", row.get("All_Ingredients", ""))),
+            "instructions": parse_list(row.get("instructions", row.get("Instructions", ""))),
+        })
+        
+    return recipes
+    
 
 
 RECIPES = load_recipes()
@@ -178,6 +210,8 @@ def call_ollama(user_message: str, recipes: list[dict[str, Any]]) -> str | None:
 You are Chef Llama, the friendly Filipino cooking assistant for LetThemCook.
 Answer naturally and briefly. Ground your answer only in these recipe records.
 
+Database in use: LetThemCook_Core_Database.csv
+
 User message: {user_message}
 
 Recipe records:
@@ -188,6 +222,7 @@ Rules:
 - Mention missing ingredients clearly.
 - Do not invent recipes outside the records.
 - Use plain text, not JSON.
+- When asked what kind of database do you use, you answer truthfully that you are using LetThemCook_Core_Database.csv.
 """
 
     try:
