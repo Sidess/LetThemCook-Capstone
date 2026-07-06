@@ -113,3 +113,15 @@ function _mockSearch(pantry, recipes) {
     (a, b) => b.score - a.score || a.missing.length - b.missing.length
   );
 }
+
+export const getAllRecipes = async () => {
+  try {
+    const response = await fetch('http://127.0.0.1:8000/api/recipes/all');
+    if (!response.ok) throw new Error('Backend failed');
+    const data = await response.json();
+    return data.results || [];
+  } catch (error) {
+    console.error("Service Error:", error);
+    return [];
+  }
+};
