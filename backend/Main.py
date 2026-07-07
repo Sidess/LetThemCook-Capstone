@@ -21,7 +21,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 BASE_DIR = Path(__file__).resolve().parent
-RECIPES_PATH = BASE_DIR / "LetThemCook_Cleaned.csv"
+RECIPES_PATH = BASE_DIR / "LetThemCook_Core_Database.csv"
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2")
 USE_OLLAMA = os.getenv("USE_OLLAMA", "true").lower() in {"1", "true", "yes", "y"}
@@ -36,7 +36,6 @@ app.add_middleware(
         "http://localhost:3000",
         "http://127.0.0.1:3000",
     ],
-    allow_origin=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -223,7 +222,7 @@ Rules:
 - Mention missing ingredients clearly.
 - Do not invent recipes outside the records.
 - Use plain text, not JSON.
-- When asked what kind of database do you use, you answer truthfully on what database or csv you are using.
+- When asked what kind of database do you use, you answer truthfully that you are using LetThemCook_Core_Database.csv.
 """
 
     try:
@@ -312,8 +311,3 @@ def generate_rag_recipe(query: RecipeQuery) -> dict[str, Any]:
         "chef_reply": reply,
         "results": results[:3],
     }
-
-@app.get("/api/recipes/all")
-def get_all_recipes():
-    """Returns all recipes for the dashboard."""
-    return {"results": RECIPES}

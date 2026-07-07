@@ -9,5 +9,3 @@ __pycache__/
 chroma_db/
 venv/
 .venv/
-
-*.csv
