@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent
 RECIPES_PATH = BASE_DIR / "LetThemCook_Cleaned.csv"
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434/api/generate")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2")
-USE_OLLAMA = os.getenv("USE_OLLAMA", "false").lower() in {"1", "true", "yes", "y"}
+USE_OLLAMA = os.getenv("USE_OLLAMA", "true").lower() in {"1", "true", "yes", "y"}
 
 app = FastAPI(title="LetThemCook Backend API", version="1.0.0")
 
